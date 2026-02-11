@@ -42,12 +42,10 @@ impl Blockchain {
     /// # Returns
     /// Une nouvelle blockchain initialisée avec le bloc genesis
     pub fn new(difficulty: usize) -> Self {
-        // TODO: Créer une nouvelle blockchain
-        // 1. Créer un vecteur vide : let mut chain = Vec::new();
-        // 2. Créer le bloc genesis : let genesis = Block::genesis();
-        // 3. Ajouter le genesis au vecteur : chain.push(genesis);
-        // 4. Retourner Self { chain, difficulty }
-        todo!("Implémenter Blockchain::new()")
+        let mut chain = Vec::new();
+        let genesis = Block::genesis();
+        chain.push(genesis);
+        Self { chain, difficulty }
     }
 
     /// Ajouter un nouveau bloc à la chaîne
@@ -58,16 +56,28 @@ impl Blockchain {
     /// # Returns
     /// Result contenant une référence au bloc ajouté ou une erreur
     pub fn add_block(&mut self, data: String) -> Result<&Block, BlockchainError> {
-        // TODO: Ajouter un nouveau bloc
-        // 1. Vérifier que data n'est pas vide
-        //    if data.is_empty() { return Err(BlockchainError::EmptyData); }
-        // 2. Obtenir le dernier bloc : let last_block = self.latest_block();
-        // 3. Calculer le nouvel index : let new_index = last_block.index + 1;
-        // 4. Créer un nouveau bloc : let mut new_block = Block::new(new_index, data, last_block.hash.clone());
-        // 5. Miner le bloc : proof_of_work::mine_block(&mut new_block, self.difficulty);
-        // 6. Ajouter le bloc à la chaîne : self.chain.push(new_block);
-        // 7. Retourner une référence au dernier bloc
-        todo!("Implémenter add_block()")
+        // Vérifier que les données ne sont pas vides
+        if data.is_empty() {
+            return Err(BlockchainError::EmptyData);
+        }
+
+        // Obtenir le dernier bloc de la chaîne
+        let last_block = self.latest_block();
+
+        // Calculer le nouvel index
+        let new_index = last_block.index + 1;
+
+        // Créer un nouveau bloc
+        let mut new_block = Block::new(new_index, data, last_block.hash.clone());
+
+        // Miner le bloc avec la difficulté configurée
+        proof_of_work::mine_block(&mut new_block, self.difficulty);
+
+        // Ajouter le bloc à la chaîne
+        self.chain.push(new_block);
+
+        // Retourner une référence au dernier bloc
+        Ok(self.latest_block())
     }
 
     /// Valider l'intégrité de toute la chaîne
@@ -75,27 +85,44 @@ impl Blockchain {
     /// # Returns
     /// true si la chaîne est valide, false sinon
     pub fn is_valid(&self) -> bool {
-        // TODO: Valider la blockchain
-        // 1. Vérifier le bloc genesis :
-        //    if self.chain[0] != Block::genesis() { return false; }
-        //
-        // 2. Pour chaque bloc (à partir de l'index 1) :
-        //    for i in 1..self.chain.len() {
-        //        let current = &self.chain[i];
-        //        let previous = &self.chain[i - 1];
-        //
-        //        // Vérifier que le hash est correct
-        //        if current.hash != current.calculate_hash() { return false; }
-        //
-        //        // Vérifier le lien avec le bloc précédent
-        //        if current.previous_hash != previous.hash { return false; }
-        //
-        //        // Vérifier que l'index est séquentiel
-        //        if current.index != previous.index + 1 { return false; }
-        //    }
-        //
-        // 3. Si tout est OK, retourner true
-        todo!("Implémenter is_valid()")
+        // Vérifier le bloc genesis par ses propriétés et son hash
+        let genesis = &self.chain[0];
+        if genesis.index != 0 || genesis.previous_hash != "0" || genesis.data != "Genesis Block" {
+            println!("Genesis block properties are invalid");
+            return false;
+        }
+
+        // Vérifier que le hash du genesis est correct
+        if genesis.hash != genesis.calculate_hash() {
+            println!("Genesis block hash is invalid");
+            return false;
+        }
+
+        // Vérifier tous les autres blocs
+        for i in 1..self.chain.len() {
+            let current = &self.chain[i];
+            let previous = &self.chain[i - 1];
+
+            // Vérifier que le hash est correct
+            if current.hash != current.calculate_hash() {
+                println!("Invalid hash at block index {}", current.index);
+                return false;
+            }
+
+            // Vérifier le lien avec le bloc précédent
+            if current.previous_hash != previous.hash {
+                println!("Invalid previous hash at block index {}", current.index);
+                return false;
+            }
+
+            // Vérifier que l'index est séquentiel
+            if current.index != previous.index + 1 {
+                println!("Invalid index at block index {}", current.index);
+                return false;
+            }
+        }
+
+        true
     }
 
     /// Obtenir le dernier bloc de la chaîne
@@ -103,10 +130,9 @@ impl Blockchain {
     /// # Returns
     /// Référence au dernier bloc
     pub fn latest_block(&self) -> &Block {
-        // TODO: Retourner le dernier bloc
-        // Utiliser self.chain.last().unwrap()
-        // (unwrap est OK ici car la chaîne a toujours au moins le genesis)
-        todo!("Implémenter latest_block()")
+        self.chain
+            .last()
+            .expect("La chaîne doit toujours avoir au moins un bloc")
     }
 
     /// Obtenir un bloc par son index
@@ -117,10 +143,7 @@ impl Blockchain {
     /// # Returns
     /// Option contenant une référence au bloc si trouvé
     pub fn get_block(&self, index: u64) -> Option<&Block> {
-        // TODO: Retourner un bloc spécifique
-        // 1. Chercher dans le vecteur : self.chain.iter().find(|b| b.index == index)
-        // Ou utiliser : self.chain.get(index as usize)
-        todo!("Implémenter get_block()")
+        self.chain.get(index as usize)
     }
 
     /// Obtenir la taille de la chaîne
@@ -128,9 +151,7 @@ impl Blockchain {
     /// # Returns
     /// Nombre de blocs dans la chaîne
     pub fn len(&self) -> usize {
-        // TODO: Retourner la longueur
-        // self.chain.len()
-        todo!("Implémenter len()")
+        self.chain.len()
     }
 
     /// Vérifier si la chaîne est vide
@@ -145,24 +166,74 @@ mod tests {
 
     #[test]
     fn test_blockchain_creation() {
-        // TODO: Tester la création d'une blockchain
+        // Créer une blockchain avec difficulté 2
+        let blockchain = Blockchain::new(2);
+
         // Vérifier qu'elle a un bloc genesis
+        assert_eq!(blockchain.len(), 1);
+        assert_eq!(blockchain.chain[0].index, 0);
+        assert_eq!(blockchain.chain[0].previous_hash, "0");
+        assert_eq!(blockchain.chain[0].data, "Genesis Block");
+        assert_eq!(blockchain.difficulty, 2);
     }
 
     #[test]
     fn test_add_block() {
-        // TODO: Tester l'ajout de blocs
-        // Ajouter plusieurs blocs et vérifier la longueur
+        // Créer une blockchain avec difficulté faible pour un test rapide
+        let mut blockchain = Blockchain::new(1);
+
+        // Ajouter plusieurs blocs
+        let result1 = blockchain.add_block("First block".to_string());
+        assert!(result1.is_ok());
+        assert_eq!(blockchain.len(), 2);
+
+        let result2 = blockchain.add_block("Second block".to_string());
+        assert!(result2.is_ok());
+        assert_eq!(blockchain.len(), 3);
+
+        // Vérifier les propriétés des blocs
+        assert_eq!(blockchain.chain[1].index, 1);
+        assert_eq!(blockchain.chain[1].data, "First block");
+        assert_eq!(blockchain.chain[2].index, 2);
+        assert_eq!(blockchain.chain[2].data, "Second block");
+
+        // Vérifier que les hash commencent par "0" (difficulté 1)
+        assert!(blockchain.chain[1].hash.starts_with("0"));
+        assert!(blockchain.chain[2].hash.starts_with("0"));
+
+        // Vérifier l'erreur avec données vides
+        let result_empty = blockchain.add_block("".to_string());
+        assert!(result_empty.is_err());
     }
 
     #[test]
     fn test_chain_validation() {
-        // TODO: Tester la validation de chaîne valide
+        // Créer une blockchain avec difficulté 1
+        let mut blockchain = Blockchain::new(1);
+
+        // Ajouter des blocs
+        blockchain.add_block("Block 1".to_string()).unwrap();
+        blockchain.add_block("Block 2".to_string()).unwrap();
+        blockchain.add_block("Block 3".to_string()).unwrap();
+
+        // Vérifier que la chaîne est valide
+        assert!(blockchain.is_valid());
     }
 
     #[test]
     fn test_invalid_chain_detection() {
-        // TODO: Tester la détection de chaîne altérée
-        // Modifier un bloc et vérifier que is_valid() retourne false
+        // Créer une blockchain valide
+        let mut blockchain = Blockchain::new(1);
+        blockchain.add_block("Block 1".to_string()).unwrap();
+        blockchain.add_block("Block 2".to_string()).unwrap();
+
+        // Vérifier que la chaîne est initialement valide
+        assert!(blockchain.is_valid());
+
+        // Altérer un bloc (modifier les données sans recalculer le hash)
+        blockchain.chain[1].data = "Modified data".to_string();
+
+        // Vérifier que la chaîne est maintenant invalide
+        assert!(!blockchain.is_valid());
     }
 }
