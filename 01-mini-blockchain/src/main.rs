@@ -11,8 +11,9 @@ async fn main() {
     // 1. Initialiser le système de logging
     tracing_subscriber::fmt::init();
     //
-    // 2. Créer une blockchain avec difficulté 4
-    let blockchain = Arc::new(RwLock::new(Blockchain::new(4)));
+    // 2. Créer une blockchain avec difficulté 2 (rapide pour développement)
+    // Difficulté 1-2 = < 1 seconde | Difficulté 3 = quelques secondes | Difficulté 4+ = très long
+    let blockchain = Arc::new(RwLock::new(Blockchain::new(2)));
     //
     // 3. Créer le routeur Axum avec toutes les routes :
        let app = Router::new()
