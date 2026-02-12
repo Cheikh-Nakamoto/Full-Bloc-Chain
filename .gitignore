@@ -33,3 +33,6 @@ cobertura.xml
 # Environment variables
 .env
 .env.local
+
+# mes .md 
+COURS_RUST_BASES.md
